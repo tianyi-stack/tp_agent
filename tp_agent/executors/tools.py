@@ -45,7 +45,7 @@ class PythonExecutor(BaseExecutor):
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                preexec_fn=_limit_resources if resource is not None else None,
+                # preexec_fn=_limit_resources if resource is not None else None,  # Disabled due to NumPy issues
             )
             return {
                 "role": "tool",

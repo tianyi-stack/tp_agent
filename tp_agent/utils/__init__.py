@@ -1,6 +1,6 @@
 """Utility modules for TP-Agent."""
 
-from .config import Config
-from .prompts import get_prompts
+from .config import load_config, get_openai_settings
+from .prompts import get_system_prompt
 
-__all__ = ['Config', 'get_prompts']
+__all__ = ['load_config', 'get_openai_settings', 'get_system_prompt']
