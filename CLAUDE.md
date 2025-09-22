@@ -56,14 +56,17 @@ pip install -e ".[dev]"
 
 ### Running the Agent
 ```bash
-# Basic usage - run a problem file with save functionality
+# Basic usage - automatically saves to outputs/ directory
 python examples/run_problem.py --file path/to/problem.txt --rounds 10
 
-# Save outputs to JSON and log files
-python examples/run_problem.py --file path/to/problem.txt --save --output-dir outputs
+# Disable automatic saving
+python examples/run_problem.py --file path/to/problem.txt --no-save
 
-# Quiet mode (no console output)
-python examples/run_problem.py --file path/to/problem.txt --save --quiet
+# Specify custom output directory (default: outputs/)
+python examples/run_problem.py --file path/to/problem.txt --output-dir custom_outputs
+
+# Quiet mode (no console output, still saves files)
+python examples/run_problem.py --file path/to/problem.txt --quiet
 ```
 
 ### Development
@@ -172,11 +175,13 @@ self.tools = {
 - Structured JSON communication with LLM
 
 ### Save Functionality
-The `run_problem.py` script includes built-in save features:
+The `run_problem.py` script automatically saves results by default:
+- **Automatic saving**: Results are saved to `outputs/` directory by default
 - **JSON output**: Complete context with metadata
 - **Log file**: Human-readable execution log
 - **Summary statistics**: Message counts, success rates
-- Output files use timestamp-based naming
+- **Timestamp naming**: Files use format `problem_name_YYYYMMDD_HHMMSS.{json|log}`
+- **Disable option**: Use `--no-save` flag to skip saving
 
 ### Testing
 Tests use `MockLLMInterface` to simulate LLM responses without API calls. The test suite covers:

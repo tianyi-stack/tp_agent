@@ -87,10 +87,10 @@ def save_readable_log(context, problem_file, output_dir="outputs"):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run TP-Agent with save functionality")
+    parser = argparse.ArgumentParser(description="Run TP-Agent with automatic save functionality")
     parser.add_argument("--file", type=str, required=True, help="Path to problem file (.txt/.md)")
     parser.add_argument("--rounds", type=int, default=10, help="Max dialogue rounds")
-    parser.add_argument("--save", action="store_true", help="Save output to files")
+    parser.add_argument("--no-save", action="store_true", help="Disable automatic saving to files")
     parser.add_argument("--output-dir", type=str, default="outputs", help="Directory for saved outputs")
     parser.add_argument("--quiet", action="store_true", help="Don't print to console")
     args = parser.parse_args()
@@ -114,8 +114,8 @@ def main():
                 print(f"  Error: {msg['err']}")
             print()
 
-    # Save outputs if requested
-    if args.save:
+    # Save outputs by default (unless --no-save is specified)
+    if not args.no_save:
         json_file = save_context(context, args.file, args.output_dir)
         log_file = save_readable_log(context, args.file, args.output_dir)
 
