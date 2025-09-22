@@ -90,14 +90,13 @@ def main():
     parser = argparse.ArgumentParser(description="Run TP-Agent with save functionality")
     parser.add_argument("--file", type=str, required=True, help="Path to problem file (.txt/.md)")
     parser.add_argument("--rounds", type=int, default=10, help="Max dialogue rounds")
-    parser.add_argument("--use-config", action="store_true", help="Use config file for API keys")
     parser.add_argument("--save", action="store_true", help="Save output to files")
     parser.add_argument("--output-dir", type=str, default="outputs", help="Directory for saved outputs")
     parser.add_argument("--quiet", action="store_true", help="Don't print to console")
     args = parser.parse_args()
 
     # Run the agent
-    llm = LLMInterface(use_config=args.use_config)
+    llm = LLMInterface()
     agent = TPAgent(llm_interface=llm)
     context = agent.run_with_problem(problem_path=args.file, max_rounds=args.rounds)
 

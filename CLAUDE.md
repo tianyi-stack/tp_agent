@@ -1,6 +1,7 @@
 # CLAUDE.md
 - 如果在本次运行中你新写了测试脚本，请在运行结束后删掉这些测试脚本。
 - 每次修改该仓库的代码，都请对应地更新这个md文件。
+- 不需要有recent change这个部分，只需要介绍目前最新的代码库状态
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -18,17 +19,59 @@ The agent follows a simple request-response loop:
 
 Key design: The LLM returns structured JSON with fields like `role`, `say`, `tool`, `code`, `timeout`, `done`. When `tool` is specified, the corresponding executor runs the code and appends results to context.
 
+## Project Structure
+
+```
+tp_agent/
+├── core/
+│   ├── host.py           # Main TPAgent class
+│   ├── llm_interface.py  # OpenAI API interface
+│   └── problem_io.py      # Problem file loading
+├── executors/
+│   ├── tools.py           # Python and Mathematica executors
+│   └── wolfram_manager.py # Wolfram Engine Docker management
+├── utils/
+│   ├── config.py          # Configuration loading
+│   └── prompts.py         # System prompt management
+config/
+├── tp_agent_config.json  # API configuration
+└── system_prompt.txt      # Agent system prompt
+examples/
+├── run_problem.py         # Main runner with save functionality
+├── problem_sho.md         # Simple harmonic oscillator example
+└── problem_quantum.md     # Quantum mechanics example
+scripts/
+└── setup_wolfram.py       # Wolfram Engine Docker setup
+tests/
+└── test_agent.py          # Unit tests
+```
+
 ## Commands
+
+### Installation
+```bash
+# Install dependencies
+pip install -e ".[dev]"
+```
+
+### Running the Agent
+```bash
+# Basic usage - run a problem file with save functionality
+python examples/run_problem.py --file path/to/problem.txt --rounds 10
+
+# Save outputs to JSON and log files
+python examples/run_problem.py --file path/to/problem.txt --save --output-dir outputs
+
+# Quiet mode (no console output)
+python examples/run_problem.py --file path/to/problem.txt --save --quiet
+```
 
 ### Development
 ```bash
-# Install dependencies (including dev dependencies)
-pip install -e ".[dev]"
-
 # Run tests
 pytest tests/ -v
 
-# Run a specific test
+# Run specific test
 pytest tests/test_agent.py::test_python_executor -v
 
 # Format code
@@ -36,21 +79,6 @@ black tp_agent/ tests/ examples/
 
 # Type checking
 mypy tp_agent/
-```
-
-### Running the Agent
-```bash
-# Run on a problem file
-python examples/run_problem.py --file path/to/problem.txt --rounds 10
-
-# Use config file for API credentials
-python examples/run_problem.py --file path/to/problem.txt --use-config
-
-# Run with save functionality (saves JSON and log files)
-python examples/run_problem_with_save.py --file path/to/problem.txt --save --output-dir outputs
-
-# Run example scripts
-python examples/sho_example.py
 ```
 
 ### Wolfram/Mathematica Setup
@@ -65,34 +93,49 @@ export WOLFRAMENGINE_DOCKER_IMAGE=wolframresearch/wolframengine
 
 ## Configuration
 
-API credentials can be configured in:
-- **config/tp_agent_config.json** - OpenAI API settings
-- **.env** file - Wolfram credentials (WOLFRAM_EMAIL, WOLFRAM_PASSWORD)
-- Environment variables - Override any setting
+### API Configuration
+Create `config/tp_agent_config.json`:
+```json
+{
+  "api_key": "your-openai-api-key",
+  "api_base": "https://api.openai.com/v1",
+  "model": "gpt-4o-mini",
+  "max_tokens": 4096,
+  "temperature": 0.1
+}
+```
 
-## Testing Approach
+### Environment Variables
+- `OPENAI_API_KEY`: Override API key
+- `USE_WOLFRAMENGINE_DOCKER`: Enable Docker for Wolfram
+- `WOLFRAMENGINE_DOCKER_IMAGE`: Wolfram Docker image name
+- `WOLFRAM_EMAIL`, `WOLFRAM_PASSWORD`: Wolfram credentials (for .env file)
 
-Tests use `MockLLMInterface` to simulate LLM responses without API calls. The test suite focuses on:
-- Executor functionality (Python/Mathematica code execution)
-- Agent flow control (context management, tool dispatch)
-- Error handling (timeouts, execution failures)
+## Features
 
-## Recent Changes
+### Problem Execution
+- Load problems from text/markdown files
+- Execute Python code with SymPy, NumPy, SciPy
+- Execute Mathematica/Wolfram code
+- Automatic timeout handling
+- Structured JSON communication with LLM
 
-### Import Fixes
-- Fixed imports in `tp_agent/utils/__init__.py` to export `load_config`, `get_openai_settings`, `get_system_prompt`
-- Fixed imports in `tp_agent/core/__init__.py` to remove non-existent `save_solution`
-- Fixed import path in `examples/run_problem.py` from `tp_agent.llm_interface` to `tp_agent.core.llm_interface`
+### Save Functionality
+The `run_problem.py` script includes built-in save features:
+- **JSON output**: Complete context with metadata
+- **Log file**: Human-readable execution log
+- **Summary statistics**: Message counts, success rates
+- Output files use timestamp-based naming
 
-### Executor Updates
-- Temporarily disabled resource limits in `PythonExecutor` (line 48 in tools.py) to fix NumPy import issues in subprocess
-
-### New Features
-- Added `examples/run_problem_with_save.py` with functionality to save execution logs as JSON and human-readable log files
-- Outputs saved to `outputs/` directory with timestamp-based filenames
+### Testing
+Tests use `MockLLMInterface` to simulate LLM responses without API calls. The test suite covers:
+- Executor functionality (Python/Mathematica)
+- Agent flow control
+- Error handling
+- Timeout management
 
 ## Known Issues
 
-1. **NumPy in subprocess**: Resource limits can cause NumPy import failures due to threading issues (OpenBLAS). Currently disabled.
-2. **Finite dimension effects**: Quantum commutator verification requires larger dimensions (n≥20) and checking bulk regions to avoid boundary effects.
-3. **API key configuration**: Ensure API keys in config/tp_agent_config.json are valid and have proper format.
+1. **NumPy in subprocess**: Resource limits can cause NumPy import failures due to threading issues (OpenBLAS). Currently disabled in executors/tools.py.
+2. **Wolfram Docker**: Requires proper Docker setup and Wolfram Engine image.
+3. **API key configuration**: Ensure valid API keys in config/tp_agent_config.json.

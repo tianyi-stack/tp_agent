@@ -18,7 +18,6 @@ class LLMInterface:
         model: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout_sec: int = 30,
-        use_config: bool = True,
         config_path: Optional[str] = None,
     ):
         """
@@ -28,12 +27,12 @@ class LLMInterface:
         - Defaults to a modern, JSON-capable model name.
         - Uses JSON mode via response_format={"type":"json_object"}.
         """
-        cfg = load_config(config_path) if use_config else {}
+        cfg = load_config(config_path)
         defaults = get_openai_settings(cfg)
 
-        self.api_key = api_key or defaults.get("api_key", os.getenv("OPENAI_API_KEY", ""))
-        self.model = (model or defaults.get("model") or "gpt-4o-mini")
-        self.base_url = base_url or defaults.get("base_url") or "https://api.openai.com/v1"
+        self.api_key = api_key or defaults.get("api_key", "")
+        self.model = model or defaults.get("model", "gpt-4o-mini")
+        self.base_url = base_url or defaults.get("base_url", "https://api.openai.com/v1")
         self.timeout_sec = timeout_sec
         self.client = httpx.Client(timeout=timeout_sec) if httpx is not None else None
 

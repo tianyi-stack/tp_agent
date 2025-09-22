@@ -47,27 +47,23 @@ def load_config(path: Optional[str] = None) -> Dict[str, Any]:
 
 def get_openai_settings(config: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
     """
-    Extract OpenAI settings from config/env with sane defaults.
-    Priority: config > env > defaults.
+    Extract OpenAI settings from config with defaults.
+    Only reads from config file, no environment variables.
     """
     cfg = config or {}
     providers = cfg.get("providers", {}) if isinstance(cfg, dict) else {}
     openai_cfg = providers.get("openai", {}) if isinstance(providers, dict) else {}
 
     api_key = (
-        (openai_cfg.get("api_key") if isinstance(openai_cfg, dict) else None)
-        or os.getenv("OPENAI_API_KEY")
-        or ""
+        openai_cfg.get("api_key") if isinstance(openai_cfg, dict) else ""
     )
     base_url = (
-        (openai_cfg.get("base_url") if isinstance(openai_cfg, dict) else None)
-        or os.getenv("OPENAI_BASE_URL")
-        or "https://api.openai.com/v1"
+        openai_cfg.get("base_url") if isinstance(openai_cfg, dict) 
+        else "https://api.openai.com/v1"
     )
     model = (
-        (openai_cfg.get("model") if isinstance(openai_cfg, dict) else None)
-        or os.getenv("OPENAI_MODEL")
-        or "gpt-4o-mini"
+        openai_cfg.get("model") if isinstance(openai_cfg, dict)
+        else "gpt-4o-mini"
     )
 
     return {"api_key": api_key, "base_url": base_url, "model": model}
