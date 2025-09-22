@@ -1,0 +1,30 @@
+[project]
+name = "tp-agent"
+version = "0.1.0"
+description = "Minimal reasoning-first agent for theoretical physics"
+requires-python = ">=3.9"
+dependencies = [
+    "sympy>=1.12",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "httpx>=0.25",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "mypy>=1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["tp_agent"]
+
+[tool.setuptools.package-data]
+tp_agent = [
+    "*.txt",
+]
