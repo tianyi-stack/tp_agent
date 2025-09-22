@@ -9,6 +9,7 @@ from pathlib import Path
 
 from tp_agent import TPAgent
 from tp_agent.core.llm_interface import LLMInterface
+from tp_agent.utils.config import load_config, get_agent_settings, get_output_settings
 
 
 def save_context(context, problem_file, output_dir="outputs", model_name="unknown"):
@@ -89,19 +90,31 @@ def save_readable_log(context, problem_file, output_dir="outputs", model_name="u
 def main():
     parser = argparse.ArgumentParser(description="Run TP-Agent with automatic save functionality")
     parser.add_argument("--file", type=str, required=True, help="Path to problem file (.txt/.md)")
-    parser.add_argument("--rounds", type=int, default=10, help="Max dialogue rounds")
-    parser.add_argument("--no-save", action="store_true", help="Disable automatic saving to files")
-    parser.add_argument("--output-dir", type=str, default="outputs", help="Directory for saved outputs")
-    parser.add_argument("--quiet", action="store_true", help="Don't print to console")
+    parser.add_argument("--no-save", action="store_true", help="Disable automatic saving to files (overrides config)")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory for saved outputs (overrides config)")
+    parser.add_argument("--quiet", action="store_true", help="Don't print to console (overrides config)")
     args = parser.parse_args()
+
+    # Load configuration
+    config = load_config()
+    agent_settings = get_agent_settings(config)
+    output_settings = get_output_settings(config)
+
+    # Get max_rounds from config
+    max_rounds = agent_settings.get("max_rounds", 10)
+
+    # Apply output settings with command-line overrides
+    save_files = not args.no_save and output_settings.get("save_json", True)
+    output_dir = args.output_dir or output_settings.get("default_dir", "outputs")
+    quiet_mode = args.quiet or output_settings.get("quiet_mode", False)
 
     # Run the agent
     llm = LLMInterface()
     agent = TPAgent(llm_interface=llm)
-    context = agent.run_with_problem(problem_path=args.file, max_rounds=args.rounds)
+    context = agent.run_with_problem(problem_path=args.file, max_rounds=max_rounds)
 
     # Print to console unless quiet mode
-    if not args.quiet:
+    if not quiet_mode:
         for msg in context:
             print(f"Role: {msg.get('role')}")
             if 'say' in msg:
@@ -114,14 +127,23 @@ def main():
                 print(f"  Error: {msg['err']}")
             print()
 
-    # Save outputs by default (unless --no-save is specified)
-    if not args.no_save:
-        json_file = save_context(context, args.file, args.output_dir, llm.model)
-        log_file = save_readable_log(context, args.file, args.output_dir, llm.model)
+    # Save outputs based on config and command-line overrides
+    if save_files:
+        json_file = None
+        log_file = None
 
-        print(f"\n=== Files Saved ===")
-        print(f"JSON: {json_file}")
-        print(f"Log:  {log_file}")
+        if output_settings.get("save_json", True):
+            json_file = save_context(context, args.file, output_dir, llm.model)
+
+        if output_settings.get("save_log", True):
+            log_file = save_readable_log(context, args.file, output_dir, llm.model)
+
+        if json_file or log_file:
+            print(f"\n=== Files Saved ===")
+            if json_file:
+                print(f"JSON: {json_file}")
+            if log_file:
+                print(f"Log:  {log_file}")
 
         # Print summary
         summary = {

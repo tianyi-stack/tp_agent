@@ -99,3 +99,42 @@ def get_openai_settings(config: Optional[Dict[str, Any]] = None) -> Dict[str, st
 
     return {"api_key": api_key, "base_url": base_url, "model": model}
 
+
+def get_agent_settings(config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Extract agent-level settings from config with defaults.
+    """
+    cfg = config or {}
+
+    # Get max_rounds from config, default to 10
+    max_rounds = cfg.get("max_rounds", 10) if isinstance(cfg, dict) else 10
+
+    # Get execution settings
+    execution = cfg.get("execution", {}) if isinstance(cfg, dict) else {}
+    default_timeout = execution.get("default_timeout", 10) if isinstance(execution, dict) else 10
+    python_timeout = execution.get("python_timeout", 10) if isinstance(execution, dict) else 10
+    mathematica_timeout = execution.get("mathematica_timeout", 10) if isinstance(execution, dict) else 10
+
+    return {
+        "max_rounds": max_rounds,
+        "default_timeout": default_timeout,
+        "python_timeout": python_timeout,
+        "mathematica_timeout": mathematica_timeout,
+        "execution": execution
+    }
+
+
+def get_output_settings(config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Extract output settings from config with defaults.
+    """
+    cfg = config or {}
+    output = cfg.get("output", {}) if isinstance(cfg, dict) else {}
+
+    return {
+        "default_dir": output.get("default_dir", "outputs") if isinstance(output, dict) else "outputs",
+        "save_json": output.get("save_json", True) if isinstance(output, dict) else True,
+        "save_log": output.get("save_log", True) if isinstance(output, dict) else True,
+        "quiet_mode": output.get("quiet_mode", False) if isinstance(output, dict) else False
+    }
+

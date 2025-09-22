@@ -4,15 +4,25 @@ from ..executors.tools import PythonExecutor, MathematicaExecutor
 from .llm_interface import LLMInterface
 from .problem_io import load_problem
 from ..utils.prompts import get_system_prompt
+from ..utils.config import load_config, get_agent_settings
 
 
 class TPAgent:
-    def __init__(self, llm_interface: Optional[LLMInterface] = None):
-        self.llm = llm_interface or LLMInterface()
+    def __init__(self, llm_interface: Optional[LLMInterface] = None, config: Optional[Dict[str, Any]] = None):
+        self.config = config or load_config()
+        self.agent_settings = get_agent_settings(self.config)
+
+        self.llm = llm_interface or LLMInterface(config_path=None)
+
+        # Initialize tools with configured timeouts
+        python_timeout = self.agent_settings.get('python_timeout', 10)
+        mathematica_timeout = self.agent_settings.get('mathematica_timeout', 10)
+
         self.tools = {
             "python_exec": PythonExecutor(),
             "mathematica_exec": MathematicaExecutor()
         }
+        self.default_timeout = self.agent_settings.get('default_timeout', 10)
         self.context: List[Dict[str, Any]] = []
         self.system_prompt = get_system_prompt()
 
@@ -37,7 +47,7 @@ class TPAgent:
                 tool_name = llm_response["tool"]
                 if tool_name in self.tools:
                     code = llm_response.get("code", "")
-                    timeout = llm_response.get("timeout", 10)
+                    timeout = llm_response.get("timeout", self.default_timeout)
 
                     tool_result = self.tools[tool_name].execute(code, timeout)
                     self.context.append(tool_result)

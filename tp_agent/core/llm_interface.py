@@ -33,14 +33,21 @@ class LLMInterface:
         self.api_key = api_key or defaults.get("api_key", "")
         self.model = model or defaults.get("model", "gpt-4o-mini")
         self.base_url = base_url or defaults.get("base_url", "https://api.openai.com/v1")
-        self.timeout_sec = timeout_sec
-        self.client = httpx.Client(timeout=timeout_sec) if httpx is not None else None
+
         # Keep a reference to provider-specific raw config for optional parameters
         try:
             providers = cfg.get("providers", {}) if isinstance(cfg, dict) else {}
             self._openai_cfg = providers.get("openai", {}) if isinstance(providers, dict) else {}
         except Exception:
             self._openai_cfg = {}
+
+        # Get timeout_sec from config if not explicitly provided
+        if timeout_sec == 30 and self._openai_cfg.get("timeout_sec"):  # 30 is the default
+            self.timeout_sec = self._openai_cfg.get("timeout_sec", 30)
+        else:
+            self.timeout_sec = timeout_sec
+
+        self.client = httpx.Client(timeout=self.timeout_sec) if httpx is not None else None
 
     def query(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         # Build inputs for Responses API
