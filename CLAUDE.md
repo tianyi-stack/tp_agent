@@ -46,9 +46,11 @@ python examples/run_problem.py --file path/to/problem.txt --rounds 10
 # Use config file for API credentials
 python examples/run_problem.py --file path/to/problem.txt --use-config
 
+# Run with save functionality (saves JSON and log files)
+python examples/run_problem_with_save.py --file path/to/problem.txt --save --output-dir outputs
+
 # Run example scripts
 python examples/sho_example.py
-python examples/quantum_example.py
 ```
 
 ### Wolfram/Mathematica Setup
@@ -74,3 +76,23 @@ Tests use `MockLLMInterface` to simulate LLM responses without API calls. The te
 - Executor functionality (Python/Mathematica code execution)
 - Agent flow control (context management, tool dispatch)
 - Error handling (timeouts, execution failures)
+
+## Recent Changes
+
+### Import Fixes
+- Fixed imports in `tp_agent/utils/__init__.py` to export `load_config`, `get_openai_settings`, `get_system_prompt`
+- Fixed imports in `tp_agent/core/__init__.py` to remove non-existent `save_solution`
+- Fixed import path in `examples/run_problem.py` from `tp_agent.llm_interface` to `tp_agent.core.llm_interface`
+
+### Executor Updates
+- Temporarily disabled resource limits in `PythonExecutor` (line 48 in tools.py) to fix NumPy import issues in subprocess
+
+### New Features
+- Added `examples/run_problem_with_save.py` with functionality to save execution logs as JSON and human-readable log files
+- Outputs saved to `outputs/` directory with timestamp-based filenames
+
+## Known Issues
+
+1. **NumPy in subprocess**: Resource limits can cause NumPy import failures due to threading issues (OpenBLAS). Currently disabled.
+2. **Finite dimension effects**: Quantum commutator verification requires larger dimensions (n≥20) and checking bulk regions to avoid boundary effects.
+3. **API key configuration**: Ensure API keys in config/tp_agent_config.json are valid and have proper format.
