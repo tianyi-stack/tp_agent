@@ -11,9 +11,9 @@ import sys
 from pathlib import Path
 
 # Add tp_agent to path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tp_agent.wolfram_manager import WolframContainerManager
+from tp_agent.executors.wolfram_manager import WolframContainerManager
 
 
 def load_env():

@@ -1,9 +1,9 @@
 import json
 from typing import Dict, List, Any, Optional
-from .tools import PythonExecutor, MathematicaExecutor
+from ..executors.tools import PythonExecutor, MathematicaExecutor
 from .llm_interface import LLMInterface
 from .problem_io import load_problem
-from .prompts import get_system_prompt
+from ..utils.prompts import get_system_prompt
 
 
 class TPAgent:
@@ -61,3 +61,7 @@ class TPAgent:
         """
         initial_ctx = load_problem(problem_path)
         return self.run(initial_context=initial_ctx, max_rounds=max_rounds)
+
+
+# Keep alias for backward compatibility
+AgentHost = TPAgent

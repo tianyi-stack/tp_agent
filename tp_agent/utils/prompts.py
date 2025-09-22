@@ -17,6 +17,12 @@ def get_system_prompt(path: Optional[str] = None) -> str:
         with open(env_path, "r", encoding="utf-8") as f:
             return f.read()
 
+    # Try config directory
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "system_prompt.txt")
+    if os.path.exists(config_path):
+        with open(config_path, "r", encoding="utf-8") as f:
+            return f.read()
+
     data = pkgutil.get_data("tp_agent", "system_prompt.txt")
     if data is not None:
         return data.decode("utf-8")

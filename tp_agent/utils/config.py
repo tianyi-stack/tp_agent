@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 DEFAULT_CONFIG_FILES = [
     "tp_agent_config.json",
     os.path.join("config", "tp_agent_config.json"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "tp_agent_config.json"),
     os.path.expanduser(os.path.join("~", ".config", "tp_agent", "config.json")),
 ]
 

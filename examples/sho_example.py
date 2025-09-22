@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from tp_agent import TPAgent
-from tp_agent.llm_interface import MockLLMInterface
+from tp_agent.core.llm_interface import MockLLMInterface
 
 
 def run_sho_example():

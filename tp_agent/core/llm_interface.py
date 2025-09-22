@@ -8,7 +8,7 @@ except Exception:  # pragma: no cover - handled at runtime
     httpx = None  # type: ignore
 
 
-from .config import load_config, get_openai_settings
+from ..utils.config import load_config, get_openai_settings
 
 
 class LLMInterface:
