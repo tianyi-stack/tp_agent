@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 
 try:  # Lazy/optional import to allow tests without httpx installed
     import httpx  # type: ignore
@@ -21,12 +21,12 @@ class LLMInterface:
         config_path: Optional[str] = None,
     ):
         """
-        A minimal OpenAI-compatible chat interface that returns a single JSON object.
+        A minimal OpenAI-compatible interface that returns a single JSON object.
 
+        - Uses the Responses API for maximum model compatibility (gpt-5, o-series, gpt-4o).
         - httpx is optional; without it, the interface returns a graceful error.
         - Defaults to a modern, JSON-capable model name.
-        - Uses JSON mode via response_format={"type":"json_object"}.
-        """
+    """
         cfg = load_config(config_path)
         defaults = get_openai_settings(cfg)
 
@@ -35,9 +35,16 @@ class LLMInterface:
         self.base_url = base_url or defaults.get("base_url", "https://api.openai.com/v1")
         self.timeout_sec = timeout_sec
         self.client = httpx.Client(timeout=timeout_sec) if httpx is not None else None
+        # Keep a reference to provider-specific raw config for optional parameters
+        try:
+            providers = cfg.get("providers", {}) if isinstance(cfg, dict) else {}
+            self._openai_cfg = providers.get("openai", {}) if isinstance(providers, dict) else {}
+        except Exception:
+            self._openai_cfg = {}
 
     def query(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        messages = self._format_messages(input_data)
+        # Build inputs for Responses API
+        instructions, input_items = self._format_responses_input(input_data)
 
         if self.client is None:
             return {
@@ -51,24 +58,44 @@ class LLMInterface:
             "Content-Type": "application/json",
         }
 
-        payload = {
+        # Always use Responses API
+        resp_payload: Dict[str, Any] = {
             "model": self.model,
-            "messages": messages,
+            "instructions": instructions,
+            "input": input_items,
             "temperature": 0.1,
-            "response_format": {"type": "json_object"},
+            # Request structured JSON output
+            "text": {"format": {"type": "json_object"}},
         }
+
+        # Optional: max_output_tokens from config
+        try:
+            mot = self._openai_cfg.get("max_output_tokens")
+            if isinstance(mot, int) and mot > 0:
+                resp_payload["max_output_tokens"] = mot
+        except Exception:
+            pass
+
+        # Optional: reasoning parameters (gpt-5 and o-series models only)
+        try:
+            if self._model_supports_reasoning(self.model):
+                reasoning_cfg = self._openai_cfg.get("reasoning")
+                if isinstance(reasoning_cfg, dict) and reasoning_cfg:
+                    resp_payload["reasoning"] = reasoning_cfg
+        except Exception:
+            pass
 
         try:
             response = self.client.post(
-                f"{self.base_url}/chat/completions",
+                f"{self.base_url}/responses",
                 headers=headers,
-                json=payload,
+                json=resp_payload,
             )
             response.raise_for_status()
 
             result = response.json()
-            content = result["choices"][0]["message"]["content"]
-            return json.loads(content)
+            content_text = self._extract_output_text_from_responses(result)
+            return json.loads(content_text)
 
         except json.JSONDecodeError as e:
             return {
@@ -77,28 +104,75 @@ class LLMInterface:
                 "done": True
             }
         except Exception as e:
+            # Include server response body when available for easier debugging
+            body = ""
+            try:
+                if hasattr(e, "response") and e.response is not None:
+                    body = f"\nResponse body: {e.response.text}"
+            except Exception:
+                pass
             return {
                 "role": "llm",
-                "say": f"Error communicating with LLM: {str(e)}",
+                "say": f"Error communicating with LLM: {str(e)}{body}",
                 "done": True
             }
 
-    def _format_messages(self, input_data: Dict[str, Any]) -> List[Dict[str, str]]:
+    def _format_responses_input(self, input_data: Dict[str, Any]) -> Tuple[str, List[Dict[str, Any]]]:
         sys_prompt = input_data.get("sys", "")
         context = input_data.get("ctx", [])
 
-        messages: List[Dict[str, str]] = [
-            {"role": "system", "content": sys_prompt},
+        user_text = (
+            "Context as JSON follows. Reply with a single JSON object "
+            "using only fields: role, say, tool, code, timeout, done.\n\n"
+            + json.dumps(context, ensure_ascii=False, indent=2)
+        )
+
+        input_items: List[Dict[str, Any]] = [
             {
                 "role": "user",
-                "content": (
-                    "Context as JSON follows. Reply with a single JSON object "
-                    "using only fields: role, say, tool, code, timeout, done.\n\n"
-                    + json.dumps(context, ensure_ascii=False, indent=2)
-                ),
-            },
+                "content": [
+                    {"type": "input_text", "text": user_text}
+                ],
+            }
         ]
-        return messages
+        return sys_prompt, input_items
+
+    def _model_supports_reasoning(self, model: str) -> bool:
+        m = (model or "").strip().lower()
+        if not m:
+            return False
+        # gpt-5 family
+        if m.startswith("gpt-5"):
+            return True
+        # o-series models (e.g., o1, o3, o4, o4-mini, etc.)
+        if m.startswith("o"):
+            return True
+        return False
+
+    def _extract_output_text_from_responses(self, result: Dict[str, Any]) -> str:
+        # Try the SDK-like convenience property if present
+        if isinstance(result, dict) and isinstance(result.get("output_text"), str):
+            return result["output_text"]
+
+        # Raw extraction from output array
+        output = result.get("output") if isinstance(result, dict) else None
+        if isinstance(output, list):
+            for item in output:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") == "message":
+                    content_list = item.get("content")
+                    if isinstance(content_list, list):
+                        for content in content_list:
+                            if (
+                                isinstance(content, dict)
+                                and content.get("type") == "output_text"
+                                and isinstance(content.get("text"), str)
+                            ):
+                                return content["text"]
+
+        # If we cannot find a text block, fall back to the entire JSON string
+        return json.dumps(result, ensure_ascii=False)
 
     def __del__(self):
         if hasattr(self, 'client') and self.client is not None:
