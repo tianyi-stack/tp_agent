@@ -63,10 +63,20 @@ class LLMInterface:
             "model": self.model,
             "instructions": instructions,
             "input": input_items,
-            "temperature": 0.1,
             # Request structured JSON output
             "text": {"format": {"type": "json_object"}},
         }
+
+        # Optional: temperature from config (only include when supported by model)
+        try:
+            temp = self._openai_cfg.get("temperature")
+            if (
+                (isinstance(temp, (int, float)))
+                and self._model_supports_temperature(self.model)
+            ):
+                resp_payload["temperature"] = float(temp)
+        except Exception:
+            pass
 
         # Optional: max_output_tokens from config
         try:
@@ -173,6 +183,18 @@ class LLMInterface:
 
         # If we cannot find a text block, fall back to the entire JSON string
         return json.dumps(result, ensure_ascii=False)
+
+    def _model_supports_temperature(self, model: str) -> bool:
+        m = (model or "").strip().lower()
+        if not m:
+            return False
+        # Known families that DO NOT support temperature in Responses API
+        if m.startswith("o"):
+            return False
+        if m.startswith("gpt-5"):
+            return False
+        # Most chat models (gpt-4o, gpt-4, gpt-3.5) support temperature
+        return True
 
     def __del__(self):
         if hasattr(self, 'client') and self.client is not None:

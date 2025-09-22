@@ -1,0 +1,21 @@
+{
+  "problem_file": "examples/problem_quantum.md",
+  "timestamp": "20250922_165956",
+  "context": [
+    {
+      "role": "llm",
+      "say": "Problem: Quantum Mechanics — Verify [x, p] = iℏ\n\nTask:\n- Verify the canonical commutation relation [x, p] = iℏ using a finite-dimensional matrix representation.\n- Use the mathematica_exec tool to construct ladder operators a, a†, then x and p.\n- Compute the commutator x p − p x and compare with iℏ·I.\n- Assert the norm of the difference is below a small tolerance (e.g., 1e-10) and print \"OK_QUANTUM\" when successful.\n\nConstraints:\n- Keep the code minimal and readable.\n- Only print concise outputs relevant to the check."
+    },
+    {
+      "role": "llm",
+      "say": "Error communicating with LLM: Client error '400 Bad Request' for url 'https://api.openai.com/v1/responses'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400\nResponse body: {\n  \"error\": {\n    \"message\": \"Unsupported parameter: 'temperature' is not supported with this model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": \"temperature\",\n    \"code\": null\n  }\n}",
+      "done": true
+    }
+  ],
+  "summary": {
+    "total_messages": 2,
+    "llm_messages": 2,
+    "tool_executions": 0,
+    "successful_executions": 0
+  }
+}
