@@ -10,6 +10,13 @@ DEFAULT_CONFIG_FILES = [
     os.path.expanduser(os.path.join("~", ".config", "tp_agent", "config.json")),
 ]
 
+DEFAULT_API_KEY_FILES = [
+    "api_key.json",
+    os.path.join("config", "api_key.json"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "api_key.json"),
+    os.path.expanduser(os.path.join("~", ".config", "tp_agent", "api_key.json")),
+]
+
 
 def find_config_path(explicit_path: Optional[str] = None) -> Optional[str]:
     """
@@ -31,6 +38,30 @@ def find_config_path(explicit_path: Optional[str] = None) -> Optional[str]:
     return None
 
 
+def load_api_key() -> Optional[str]:
+    """
+    Load API key from separate file or environment variable.
+    Precedence: $OPENAI_API_KEY > api_key.json locations.
+    """
+    # Check environment variable first
+    env_key = os.getenv("OPENAI_API_KEY")
+    if env_key:
+        return env_key
+
+    # Check API key files
+    for p in DEFAULT_API_KEY_FILES:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if "api_key" in data:
+                        return data["api_key"]
+            except Exception:
+                continue
+
+    return None
+
+
 def load_config(path: Optional[str] = None) -> Dict[str, Any]:
     """
     Load configuration JSON. Returns empty dict if not found or invalid.
@@ -48,17 +79,17 @@ def load_config(path: Optional[str] = None) -> Dict[str, Any]:
 def get_openai_settings(config: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
     """
     Extract OpenAI settings from config with defaults.
-    Only reads from config file, no environment variables.
+    API key is loaded from separate file or environment variable.
     """
     cfg = config or {}
     providers = cfg.get("providers", {}) if isinstance(cfg, dict) else {}
     openai_cfg = providers.get("openai", {}) if isinstance(providers, dict) else {}
 
-    api_key = (
-        openai_cfg.get("api_key") if isinstance(openai_cfg, dict) else ""
-    )
+    # Load API key from separate file or env var
+    api_key = load_api_key() or ""
+
     base_url = (
-        openai_cfg.get("base_url") if isinstance(openai_cfg, dict) 
+        openai_cfg.get("base_url") if isinstance(openai_cfg, dict)
         else "https://api.openai.com/v1"
     )
     model = (

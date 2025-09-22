@@ -1,6 +1,6 @@
 === TP-Agent Execution Log ===
 Problem: examples/problem_quantum.md
-Timestamp: 20250922_165956
+Timestamp: 20250922_171635
 ==================================================
 
 [1] Role: llm
@@ -17,16 +17,7 @@ Constraints:
 - Only print concise outputs relevant to the check.
 
 [2] Role: llm
-    Say: Error communicating with LLM: Client error '400 Bad Request' for url 'https://api.openai.com/v1/responses'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Response body: {
-  "error": {
-    "message": "Unsupported parameter: 'temperature' is not supported with this model.",
-    "type": "invalid_request_error",
-    "param": "temperature",
-    "code": null
-  }
-}
+    Say: Error communicating with LLM: The read operation timed out
 
 ==================================================
 Total messages: 2

@@ -38,5 +38,5 @@ dmypy.json
 *.swo
 *~
 .DS_Store
-tp_agent_config.json
-config/*.json
+config/api_key.json
+api_key.json

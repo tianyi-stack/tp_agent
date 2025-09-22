@@ -1,0 +1,12 @@
+{
+  "providers": {
+    "openai": {
+      "base_url": "https://api.openai.com/v1",
+      "model": "gpt-5",
+      "max_output_tokens": 200000,
+      "reasoning": {
+        "effort": "medium"
+      }
+    }
+  }
+}
