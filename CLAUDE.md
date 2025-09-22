@@ -111,6 +111,57 @@ Create `config/tp_agent_config.json`:
 - `WOLFRAMENGINE_DOCKER_IMAGE`: Wolfram Docker image name
 - `WOLFRAM_EMAIL`, `WOLFRAM_PASSWORD`: Wolfram credentials (for .env file)
 
+## Tools and Executors
+
+The TP-Agent provides two main code execution tools that the LLM can use:
+
+### PythonExecutor (`python_exec`)
+Executes Python code in an isolated subprocess with:
+- **Pre-installed libraries**: NumPy, SciPy, SymPy, matplotlib
+- **Timeout control**: Default 10 seconds, configurable per execution
+- **Error handling**: Returns stdout, stderr, and success status
+- **Temporary file execution**: Code is written to a temp file and executed
+- **Resource limits**: Currently disabled due to NumPy/OpenBLAS threading issues
+- **Return format**: `{"role": "tool", "tool": "python_exec", "ok": bool, "out": str, "err": str}`
+
+### MathematicaExecutor (`mathematica_exec`)
+Executes Wolfram Language/Mathematica code with multiple backends:
+
+1. **Managed Docker Container** (preferred):
+   - Persistent container with name `tp-wolfram-engine`
+   - Automatic activation and lifecycle management
+   - Credentials stored in `~/.tp_agent/wolfram_state.json`
+   - Volumes mounted for persistent licensing
+
+2. **Direct Docker** (fallback):
+   - Uses `wolframresearch/wolframengine` image
+   - Mounts license directories: `~/.Wolfram`, `~/.Mathematica`
+   - Requires `USE_WOLFRAMENGINE_DOCKER=1` environment variable
+
+3. **Native wolframscript** (if installed):
+   - Direct execution using local Mathematica installation
+   - Fastest option if Mathematica is installed locally
+
+**Configuration**:
+- Set `WOLFRAM_EMAIL` and `WOLFRAM_PASSWORD` in environment or `.env` file
+- Container state persists across sessions
+- Automatic fallback chain: Manager → Docker → Native
+
+### Tool Registration
+Tools are registered in `TPAgent.__init__()`:
+```python
+self.tools = {
+    "python_exec": PythonExecutor(),
+    "mathematica_exec": MathematicaExecutor()
+}
+```
+
+### Execution Flow
+1. LLM response includes `tool` and `code` fields
+2. TPAgent dispatches to appropriate executor
+3. Executor runs code with specified timeout
+4. Result is appended to context for next LLM query
+
 ## Features
 
 ### Problem Execution
