@@ -11,15 +11,15 @@ from tp_agent import TPAgent
 from tp_agent.core.llm_interface import LLMInterface
 
 
-def save_context(context, problem_file, output_dir="outputs"):
+def save_context(context, problem_file, output_dir="outputs", model_name="unknown"):
     """Save the conversation context to a JSON file"""
     # Create output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    # Generate filename based on problem and timestamp
+    # Generate filename based on problem, model, and timestamp
     problem_name = Path(problem_file).stem
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{output_dir}/{problem_name}_{timestamp}.json"
+    output_file = f"{output_dir}/{problem_name}_{model_name}_{timestamp}.json"
 
     # Save context with metadata
     output_data = {
@@ -40,13 +40,13 @@ def save_context(context, problem_file, output_dir="outputs"):
     return output_file
 
 
-def save_readable_log(context, problem_file, output_dir="outputs"):
+def save_readable_log(context, problem_file, output_dir="outputs", model_name="unknown"):
     """Save a human-readable log file"""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     problem_name = Path(problem_file).stem
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = f"{output_dir}/{problem_name}_{timestamp}.log"
+    log_file = f"{output_dir}/{problem_name}_{model_name}_{timestamp}.log"
 
     with open(log_file, 'w', encoding='utf-8') as f:
         f.write(f"=== TP-Agent Execution Log ===\n")
@@ -116,8 +116,8 @@ def main():
 
     # Save outputs by default (unless --no-save is specified)
     if not args.no_save:
-        json_file = save_context(context, args.file, args.output_dir)
-        log_file = save_readable_log(context, args.file, args.output_dir)
+        json_file = save_context(context, args.file, args.output_dir, llm.model)
+        log_file = save_readable_log(context, args.file, args.output_dir, llm.model)
 
         print(f"\n=== Files Saved ===")
         print(f"JSON: {json_file}")
