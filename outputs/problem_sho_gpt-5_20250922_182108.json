@@ -1,0 +1,21 @@
+{
+  "problem_file": "examples/problem_sho.md",
+  "timestamp": "20250922_182108",
+  "context": [
+    {
+      "role": "llm",
+      "say": "Problem: # Graduate-Level Problem: Driven Anharmonic Oscillator Analysis\n\n## Problem Statement\n\nConsider a one-dimensional oscillator consisting of a particle of mass $m = 1.0 \\times 10^{-15}$ kg attached to a spring. The system experiences both harmonic and anharmonic restoring forces, with a potential energy given by:\n\n$$V(x) = \\frac{1}{2}kx^2 + \\frac{\\alpha}{4}x^4$$\n\nwhere $k = 1.0 \\times 10^{-1}$ N/m is the linear spring constant and $\\alpha = 1.0 \\times 10^{3}$ N/m³ is a small anharmonic parameter ($\\alpha \\ll k$). The particle is also subject to a time-dependent external driving force:\n\n$$F_{ext}(t) = F_0 \\cos(\\omega_d t)$$\n\nwhere $F_0 = 1.0 \\times 10^{-12}$ N and the driving frequency $\\omega_d = 0.9\\omega_0$ (slightly below the natural frequency $\\omega_0 = \\sqrt{k/m}$).\n\nThe system starts from rest at $t = 0$ with an initial displacement $x_0 = 5.0 \\times 10^{-11}$ m.\n\nUsing the Lagrangian formalism and Euler-Lagrange equations, followed by perturbation theory for the anharmonic correction, **determine the steady-state amplitude of oscillation** after transient effects have died out, and **calculate the first-order frequency correction** due to the anharmonic term for small amplitude oscillations.\n\nExpress your final answers in the form:\n- Steady-state amplitude: $A_{steady} = $ [numerical value] m\n- Frequency correction: $\\Delta \\omega = $ [analytical expression] rad/s\n\nGiven physical constants: $\\hbar = 1.055 \\times 10^{-34}$ J·s"
+    },
+    {
+      "role": "llm",
+      "say": "From the Euler–Lagrange equation one obtains the driven Duffing equation: x¨ + ω0^2 x + (α/m) x^3 = (F0/m) cos(ωd t). In the linear limit (α → 0), the steady-state amplitude at drive frequency ωd (ignoring the homogeneous transient) is A = F0 / |k − m ωd^2|. With the given values, A_steady = 1.0e-12 / (0.19 × 1.0e-1) ≈ 5.263×10^−11 m. For small-amplitude oscillations, the first-order anharmonic (hardening) frequency shift from Lindstedt–Poincaré/averaging is Δω = (3 α A^2)/(8 m ω0) = ω0 (3 α A^2)/(8 k), positive for α > 0.\n\nSteady-state amplitude: A_steady = 5.263×10^−11 m\nFrequency correction: Δω = (3 α A^2)/(8 m ω0) rad/s",
+      "done": true
+    }
+  ],
+  "summary": {
+    "total_messages": 2,
+    "llm_messages": 2,
+    "tool_executions": 0,
+    "successful_executions": 0
+  }
+}
