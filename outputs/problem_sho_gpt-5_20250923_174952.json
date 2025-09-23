@@ -1,0 +1,35 @@
+{
+  "problem_file": "examples/problem_sho.md",
+  "timestamp": "20250923_174952",
+  "system_prompt": "You are TP-Agent, a specialized theoretical physics problem-solving assistant that excels at symbolic computation and numerical analysis.\nSpeak JSON only and return a single JSON object per response.\n\n## Core Principle: TRY TO USE TOOLS FOR CALCULATIONS\n\n## Available Tools\n\n### 1. python_exec\nUse for:\n- Symbolic mathematics with SymPy (differentiation, integration, solving equations, series expansion)\n- Numerical computations with NumPy and SciPy (matrix operations, eigenvalues, numerical integration)\n- Plotting and visualization with matplotlib\n- General Python computations\nExample domains: Classical mechanics, quantum mechanics, statistical physics, electromagnetism\n\n### 2. mathematica_exec\nUse for:\n- Advanced symbolic manipulation that SymPy struggles with\n- Specialized physics functions (spherical harmonics, special functions)\n- Complex integral transforms\n- When you need Mathematica's specific physics packages\nExample: Complex contour integrals, advanced tensor calculations, specialized quantum operators\n\n## Response Format\nWhen using a tool:\n{\n  \"role\": \"llm\",\n  \"tool\": \"python_exec\" or \"mathematica_exec\",\n  \"code\": \"your code here\",\n  \"timeout\": 10  // optional, default 10 seconds, max 60\n}\n\nWhen reasoning without tools:\n{\n  \"role\": \"llm\",\n  \"say\": \"your reasoning here\"\n}\n\nWhen finished:\n{\n  \"role\": \"llm\",\n  \"done\": true,\n  \"say\": \"final summary of the solution\"\n}\n\n## Best Practices\n1. **Tool Selection Strategy**:\n   - Start with python_exec for most problems (SymPy is very capable)\n   - Switch to mathematica_exec if Python fails or for Mathematica-specific features\n   - You can alternate between tools as needed\n\n2. **Code Structure**:\n   - Import necessary libraries at the start of each code block\n   - Print intermediate results with descriptive labels\n   - ALWAYS end with an OK_* marker on success (e.g., \"OK_SOLVED\", \"OK_COMPUTED\")\n   - Keep code focused on one specific calculation per tool call\n\n3. **Physics Problem Approach**:\n   - First understand the physical system and identify key equations\n   - Set up the problem symbolically before numerical evaluation\n   - Verify results make physical sense (check units, limiting cases)\n   - Use both analytical and numerical methods when appropriate\n\n4. **Error Handling**:\n   - If a tool fails, analyze the error and try alternative approaches\n   - Consider switching tools if one consistently fails\n   - Break complex calculations into smaller steps\n\n## Example Workflow\n1. Parse the physics problem and identify required calculations\n2. Use tools to set up equations symbolically\n3. Solve analytically when possible, numerically when necessary\n4. Verify solutions satisfy initial conditions/constraints\n5. Provide physical interpretation of results\n\n",
+  "context": [
+    {
+      "role": "llm",
+      "say": "Problem: # Graduate-Level Problem: Driven Anharmonic Oscillator Analysis\n\n## Problem Statement\n\nConsider a one-dimensional oscillator consisting of a particle of mass $m = 1.0 \\times 10^{-15}$ kg attached to a spring. The system experiences both harmonic and anharmonic restoring forces, with a potential energy given by:\n\n$$V(x) = \\frac{1}{2}kx^2 + \\frac{\\alpha}{4}x^4$$\n\nwhere $k = 1.0 \\times 10^{-1}$ N/m is the linear spring constant and $\\alpha = 1.0 \\times 10^{3}$ N/m³ is a small anharmonic parameter ($\\alpha \\ll k$). The particle is also subject to a time-dependent external driving force:\n\n$$F_{ext}(t) = F_0 \\cos(\\omega_d t)$$\n\nwhere $F_0 = 1.0 \\times 10^{-12}$ N and the driving frequency $\\omega_d = 0.9\\omega_0$ (slightly below the natural frequency $\\omega_0 = \\sqrt{k/m}$).\n\nThe system starts from rest at $t = 0$ with an initial displacement $x_0 = 5.0 \\times 10^{-11}$ m.\n\nUsing the Lagrangian formalism and Euler-Lagrange equations, followed by perturbation theory for the anharmonic correction, **determine the steady-state amplitude of oscillation** after transient effects have died out, and **calculate the first-order frequency correction** due to the anharmonic term for small amplitude oscillations.\n\nExpress your final answers in the form:\n- Steady-state amplitude: $A_{steady} = $ [numerical value] m\n- Frequency correction: $\\Delta \\omega = $ [analytical expression] rad/s\n\nGiven physical constants: $\\hbar = 1.055 \\times 10^{-34}$ J·s"
+    },
+    {
+      "role": "llm",
+      "tool": "python_exec",
+      "code": "import math\n\n# Given parameters\nm = 1.0e-15       # kg\nk = 1.0e-1        # N/m\nalpha = 1.0e3     # N/m^3\nF0 = 1.0e-12      # N\n\n# Natural and driving frequencies\nomega0 = math.sqrt(k/m)\nomegad = 0.9 * omega0\n\n# Linear (alpha -> 0) steady-state amplitude for undamped driven oscillator\n# A = F0 / |m(omega0^2 - omegad^2)| = F0 / |k - m omegad^2|\nAsteady = F0 / abs(k - m*omegad**2)\n\nprint(f\"omega0 = {omega0:.6e} rad/s\")\nprint(f\"omegad = {omegad:.6e} rad/s\")\nprint(f\"A_steady (linear response) = {Asteady:.6e} m\")\n\n# Smallness parameter for perturbation validity: (alpha A^2)/k (dimensionless)\nsmallness = alpha * Asteady**2 / k\nprint(f\"perturbation smallness alpha*A^2/k = {smallness:.3e}\")\n\nprint(\"OK_COMPUTED\")",
+      "timeout": 10
+    },
+    {
+      "role": "tool",
+      "tool": "python_exec",
+      "ok": true,
+      "out": "omega0 = 1.000000e+07 rad/s\nomegad = 9.000000e+06 rad/s\nA_steady (linear response) = 5.263158e-11 m\nperturbation smallness alpha*A^2/k = 2.770e-17\nOK_COMPUTED\n",
+      "err": ""
+    },
+    {
+      "role": "llm",
+      "done": true,
+      "say": "Steady-state amplitude: A_steady = 5.263158e-11 m\nFrequency correction: Δω = (3 α A^2) / (8 m ω0) rad/s"
+    }
+  ],
+  "summary": {
+    "total_messages": 4,
+    "llm_messages": 3,
+    "tool_executions": 1,
+    "successful_executions": 1
+  }
+}

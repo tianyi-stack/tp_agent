@@ -12,7 +12,7 @@ from tp_agent.core.llm_interface import LLMInterface
 from tp_agent.utils.config import load_config, get_agent_settings, get_output_settings
 
 
-def save_context(context, problem_file, output_dir="outputs", model_name="unknown"):
+def save_context(context, problem_file, output_dir="outputs", model_name="unknown", system_prompt=None):
     """Save the conversation context to a JSON file"""
     # Create output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -26,6 +26,7 @@ def save_context(context, problem_file, output_dir="outputs", model_name="unknow
     output_data = {
         "problem_file": problem_file,
         "timestamp": timestamp,
+        "system_prompt": system_prompt,
         "context": context,
         "summary": {
             "total_messages": len(context),
@@ -41,7 +42,7 @@ def save_context(context, problem_file, output_dir="outputs", model_name="unknow
     return output_file
 
 
-def save_readable_log(context, problem_file, output_dir="outputs", model_name="unknown"):
+def save_readable_log(context, problem_file, output_dir="outputs", model_name="unknown", system_prompt=None):
     """Save a human-readable log file"""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -54,6 +55,11 @@ def save_readable_log(context, problem_file, output_dir="outputs", model_name="u
         f.write(f"Problem: {problem_file}\n")
         f.write(f"Timestamp: {timestamp}\n")
         f.write("=" * 50 + "\n\n")
+
+        if system_prompt:
+            f.write("=== System Prompt ===\n")
+            f.write(system_prompt)
+            f.write("\n" + "=" * 50 + "\n\n")
 
         for i, msg in enumerate(context, 1):
             f.write(f"[{i}] Role: {msg.get('role')}\n")
@@ -133,10 +139,10 @@ def main():
         log_file = None
 
         if output_settings.get("save_json", True):
-            json_file = save_context(context, args.file, output_dir, llm.model)
+            json_file = save_context(context, args.file, output_dir, llm.model, agent.system_prompt)
 
         if output_settings.get("save_log", True):
-            log_file = save_readable_log(context, args.file, output_dir, llm.model)
+            log_file = save_readable_log(context, args.file, output_dir, llm.model, agent.system_prompt)
 
         if json_file or log_file:
             print(f"\n=== Files Saved ===")

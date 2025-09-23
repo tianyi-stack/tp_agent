@@ -74,6 +74,14 @@ class LLMInterface:
             "text": {"format": {"type": "json_object"}},
         }
 
+        # Debug logging: print full request payload
+        if os.getenv("TP_AGENT_DEBUG", "").lower() == "true":
+            print("=== DEBUG: Full LLM Request ===", file=os.sys.stderr)
+            print(f"Model: {self.model}", file=os.sys.stderr)
+            print(f"Instructions (system prompt): {instructions[:200]}..." if len(instructions) > 200 else f"Instructions (system prompt): {instructions}", file=os.sys.stderr)
+            print(f"Input items: {json.dumps(input_items, indent=2)[:500]}..." if len(json.dumps(input_items)) > 500 else f"Input items: {json.dumps(input_items, indent=2)}", file=os.sys.stderr)
+            print("================================", file=os.sys.stderr)
+
         # Optional: temperature from config (only include when supported by model)
         try:
             temp = self._openai_cfg.get("temperature")
